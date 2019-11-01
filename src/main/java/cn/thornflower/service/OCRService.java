@@ -9,6 +9,8 @@
   
 package cn.thornflower.service;
 
+import java.io.File;
+
 import cn.thornflower.pojo.Result;
 
 /**  
@@ -26,5 +28,8 @@ public interface OCRService {
     public Result OCR_byImageBase64(String image);
     
     public Result OCR_byWeiXin(String image,String userKey);
+    
+    public Result OCR_byWeiXin_upload(File file);
+    
 }
   

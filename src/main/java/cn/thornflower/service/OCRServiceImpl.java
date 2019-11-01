@@ -10,6 +10,7 @@
 package cn.thornflower.service;
 
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,6 +25,7 @@ import com.alibaba.fastjson.JSONObject;
 import cn.thornflower.config.WeixinConfig;
 import cn.thornflower.pojo.Result;
 import cn.thornflower.utils.HttpUtils;
+import cn.thornflower.utils.OkHttpUtil;
 import cn.thornflower.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
  * @see        
  */
 @Service
-@Slf4j
 public class OCRServiceImpl implements OCRService{
     
     private static final String OCR_SERVER_URL = "https://ocrapi-advanced.taobao.com";
@@ -103,17 +104,30 @@ public class OCRServiceImpl implements OCRService{
      */
     @Override
     public Result OCR_byWeiXin(String image,String userKey) {
-        log.info(image);
-        log.info(userKey);
-        Object object = redisUtils.get(userKey);
-        JSONObject parseObject = JSONObject.parseObject(object.toString());
-        String openId = parseObject.getString("openId");
-        String weixin_get_accessToken = weixinConfig.weixin_get_accessToken(openId);
-        //https://api.weixin.qq.com/cv/ocr/comm?img_url=ENCODE_URL&access_token=ACCESS_TOCKEN
+        String weixin_get_accessToken = weixinConfig.weixin_get_accessToken();
         String url = "https://api.weixin.qq.com/cv/ocr/comm?img_url" + image +"&access_token=" + weixin_get_accessToken;
-        log.info(url);
-        //httpUtils.doPost(host, path, method, headers, querys, bodys);
         return null;
+    }
+
+    /**
+     * 使用微信小程序的ocr
+     * 
+     */
+    @Override
+    public Result OCR_byWeiXin_upload(File file) {
+        //获取access_token
+        String weixin_get_accessToken = weixinConfig.weixin_get_accessToken();
+        
+        if(!"".equals(weixin_get_accessToken)){
+            //把 access_token 封装到请求参数中
+            Map<String, Object> querys = new HashMap<String, Object>();
+            querys.put("access_token", weixin_get_accessToken);
+            //发送ocr请求
+            String postFile = OkHttpUtil.postFile("https://api.weixin.qq.com/cv/ocr/comm", querys, file);
+            return new Result(200, "解析成功", postFile);
+        }else{
+            return new Result(200, "服务异常");
+        }
     }
 }
   
