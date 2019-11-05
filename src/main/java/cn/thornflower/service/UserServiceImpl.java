@@ -51,12 +51,12 @@ public class UserServiceImpl implements UserService{
     
     @Override
     public Result thirdLogin(String code,String userKey) {
-        
-        if (!"".equals(userKey) || userKey != null) {
-            Object userForRedis = redisUtils.get(userKey);
-            if (!(userForRedis == null)) {
-                return new Result(200, "已登录成功",userKey);
-            }
+        log.info("登陆code:" + code);
+        log.info("登陆userKey:" + userKey);
+        //如果userKey 不等于空--> 用户之前登录过
+        if (!"".equals(userKey) && userKey != null) {
+            //删除当前userKey 
+            redisUtils.del(userKey);
         }
         
         //微信小程序登陆链接
@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService{
             if (userIdBySessionId == null) {
                 UserInfo userInfo = new UserInfo();
                 userInfo.setOpenId(openId);
-                userInfo.setSessionKey(parseObject.getString("session_key"));
+                //userInfo.setSessionKey(parseObject.getString("session_key"));
                 userMapperW.addUser(userInfo);
             }else {
                 log.info("用户openid:"+openId);
@@ -90,7 +90,8 @@ public class UserServiceImpl implements UserService{
             JSONObject sessionObj = new JSONObject();
             sessionObj.put( "openId",openId );
             sessionObj.put( "sessionKey",parseObject.getString("session_key") );
-            redisUtils.set(generate_UUID, sessionObj.toJSONString());
+            //session_key 保存24小时
+            redisUtils.set(generate_UUID, sessionObj.toJSONString(),86400);
             redisUtils.set(openId, generate_UUID);
  
             return new Result(200, "登陆成功",generate_UUID);
@@ -106,6 +107,32 @@ public class UserServiceImpl implements UserService{
         UUID uuid=UUID.randomUUID();
         String str = uuid.toString();
         return str.replace("-", "");
+    }
+
+
+    /**
+     * 检查用户的登陆状态
+     */
+    @Override
+    public Result checkUserStatus(String userKey) {
+        log.info("检查用户的登陆状态:" + userKey);
+        //判断用户的userKey是否为空
+        if (!"".equals(userKey) && userKey != null) {
+            //不为空去redis中查userKey对应的openid 和 session_key 组成的json字符串
+            Object userForRedis = redisUtils.get(userKey);
+            //判断这个字符串是否为空;redis中 为空 说明用户没有登录过 或者已过期  返回 null
+            if (!(userForRedis == null)) {
+                //不为空 删除当前userKey 从新生成一个 并 缓存 
+                redisUtils.del(userKey);
+                //新userKey
+                String generate_UUID = generate_UUID();
+                //把新的 userKey 保存24小时
+                redisUtils.set(generate_UUID, userForRedis.toString(),86400);
+                //返回
+                return new Result(200, "已登录成功",generate_UUID);
+            }
+        }
+        return null;
     }
     
 }

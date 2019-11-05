@@ -24,5 +24,7 @@ import cn.thornflower.pojo.Result;
 public interface UserService {
 
     Result thirdLogin(String code,String userKey);
+    
+    Result checkUserStatus(String userKey);
 }
   

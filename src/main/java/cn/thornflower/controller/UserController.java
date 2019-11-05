@@ -10,8 +10,8 @@
 package cn.thornflower.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import cn.thornflower.pojo.Result;
@@ -33,9 +33,14 @@ public class UserController {
     @Autowired
     private UserService userService;
     
-    @RequestMapping(value = "thirdLogin" ,method = RequestMethod.GET)
+    @GetMapping(value = "thirdLogin")
     public Result login(String code,String userKey) {
         return userService.thirdLogin(code,userKey);
+    }
+    
+    @PostMapping(value = "checkUserStatus")
+    public Result checkUserStatus(String userKey) {
+        return userService.checkUserStatus(userKey);
     }
 }
   

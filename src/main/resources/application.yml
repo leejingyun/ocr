@@ -47,6 +47,7 @@
  logging:
   level:
     cn.thornflower.mapper: DEBUG
+ 
  server:
   port: 443
   ssl:
